@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GRA W PENISA</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: darkgray;
+
+
+        }
+
+        canvas {
+            border: 3px solid #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas></canvas>
+
+    <!--<audio autoplay loop src="C:\Users\Ja\Desktop\Cymatics FL Studio Projects Selects WAV AiFF FLP\Quake III Arena\Nowy folder\music.mp3"> -->
+        <audio id="oh" src="C:\Users\Ja\Desktop\Cymatics FL Studio Projects Selects WAV AiFF FLP\Quake III Arena\Nowy folder\ball.mp3"></audio>
+        <script>
+            const canvas = document.querySelector('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 1000;
+            canvas.height = 500;
+            const cw = canvas.width;
+            const ch = canvas.height;
+            const oh = document.getElementById('oh');
+
+            const bs = 10;
+            let ballX = cw / 2 - bs / 2
+            let ballY = ch / 2 - bs / 2
+
+            paddleHeight = 100;
+            paddleWidth = 20;
+            const ph = paddleHeight;
+            const pw = paddleWidth;
+
+            const paddlePhisicalWidth = 5;
+
+            const playerX = 70;
+            const aiX = canvas.width-90;
+
+            let playerY = canvas.height/2 - paddleHeight/2;
+            let aiY = canvas.height/2 - paddleHeight/2;
+
+            lineWidth = 6;
+            lineHeight = 16;
+            const lw = lineWidth;
+            const lh = lineHeight;
+
+            let ballSpeedX = 4;
+            let ballSpeedY = 2;
+
+            function player() {
+                ctx.fillStyle = 'yellow';
+                ctx.fillRect(playerX, playerY, pw, ph);
+            }
+
+            function AI() {
+                ctx.fillStyle = 'green';
+                ctx.fillRect(aiX, aiY, pw, ph);
+            }
+
+            function ball() {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(ballX, ballY, bs, bs);
+
+                ballX += ballSpeedX;
+                ballY += ballSpeedY;
+
+                if (ballY <= 0 || ballY + bs >= ch) {
+                    ballSpeedY = -ballSpeedY;
+                    speedUp();
+
+                    if (ballX <= 0 || ballX + bs >= cw)
+
+                        ballSpeedX = -ballSpeedX;
+                    speedUp();
+                }
+
+                if(
+                    ballHitsPaddleY(ballY, playerY, paddleHeight) &&
+                    ballHitsPaddleX(ballX, playerX + paddleWidth - paddlePhisicalWidth, paddlePhisicalWidth) &&
+                    ballMovesTowardPlayer(ballSpeedX) 
+                )
+                {
+                    ballSpeedX = -ballSpeedX;
+                    let playPromise = oh.play();
+
+                    if (playPromise !== undefined) {
+                            playPromise.then(function (e) {
+                                console.log(e);
+                            }).catch(function (error) {
+
+                            });
+                        }
+
+                }
+
+                if(
+                    ballHitsPaddleY(ballY, aiY, paddleHeight) &&
+                    ballHitsPaddleX(ballX, aiX, paddlePhisicalWidth) &&
+                    ballMovesTowardAI(ballSpeedX) 
+                )
+                {
+                    ballSpeedX = -ballSpeedX;
+                    let playPromise = oh.play();
+
+
+                    if (playPromise !== undefined) {
+                            playPromise.then(function (e) {
+                                console.log(e);
+                            }).catch(function (error) {
+
+                            });
+                        }
+                }
+            }
+
+            function ballMovesTowardPlayer(ballSpeedX)
+            {
+                return ballSpeedX < 0;
+            }
+
+            function ballMovesTowardAI(ballSpeedX)
+            {
+                return ballSpeedX > 0;
+            }
+
+            function ballHitsPaddleY(ballY, playerY, paddleHeight)
+            {
+                return ballY <= (playerY + paddleHeight) && ballY >= playerY;
+            }
+
+            function ballHitsPaddleX(ballX, playerX, paddleWidth = null)
+            {
+                paddleWidth = paddleWidth || paddlePhisicalWidth;
+                return ballX <= (playerX + paddlePhisicalWidth) && ballX >= playerX;
+            }
+
+
+            function table() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, cw, ch);
+
+                for (let linePostion = 20; linePostion < ch; linePostion += 30) {
+                    ctx.fillStyle = "gray"
+                    ctx.fillRect(cw / 2 - lw / 2, linePostion, lw, lh)
+                }
+            }
+
+            topCanvas = canvas.offsetTop;
+
+
+
+            function playerPostion(event) {
+                playerY = event.clientY - topCanvas - ph / 2;
+
+                if (playerY >= ch - ph) {
+                    playerY = ch - ph
+                }
+
+                if (playerY <= 0) {
+                    playerY = 0;
+                }
+
+                console.log(playerX);
+            }
+
+            function speedUp() {
+                return;
+                if (ballSpeedX > 0 && ballSpeedX < 16) {
+                    ballSpeedX += .2;
+                }
+
+                else if (ballSpeedX < 0 && ballSpeedX > -16) {
+                    ballSpeedX -= .2;
+
+                }
+
+                if (ballSpeedY > 0 && ballSpeedY < 16) {
+                    ballSpeedY += .2;
+                }
+
+                else if (ballSpeedY < 0 && ballSpeedY > -16) {
+                    ballSpeedY -= .2;
+
+                }
+            }
+
+            function aiPostion() {
+
+                if(ballY > canvas.height - paddleHeight)
+                {
+                    aiY = canvas.height - paddleHeight;
+                    return;
+                }
+                
+                if(ballY <= paddleHeight / 2)
+                {
+                    aiY = 0;
+                    return;
+                }
+
+                aiY = ballY - paddleHeight / 2;
+
+            }
+            canvas.addEventListener("mousemove", playerPostion)
+
+
+
+            function game() {
+                table()
+                ball()
+                player()
+                AI()
+                aiPostion()
+            }
+            setInterval(game, 100 / 60)
+
+
+
+
+        </script>
+</body>
+
+</html>
